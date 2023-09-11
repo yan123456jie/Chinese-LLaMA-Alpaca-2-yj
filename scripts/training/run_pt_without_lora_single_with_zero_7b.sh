@@ -1,12 +1,12 @@
 lr=2e-4
-lora_rank=64
-lora_alpha=128
+lora_rank=8
+lora_alpha=32
 lora_trainable="q_proj,v_proj,k_proj,o_proj,gate_proj,down_proj,up_proj"
 modules_to_save="embed_tokens,lm_head"
 lora_dropout=0.05
 
-pretrained_model=/data/chinese-llama-2-13b
-chinese_tokenizer_path=/data/chinese-llama-2-13b
+pretrained_model=/data/chinese-llama-2-7b
+chinese_tokenizer_path=/data/chinese-llama-2-7b
 dataset_dir=/data/dataset/chinese_sample
 data_cache=/data/temp_data_cache_dir
 per_device_train_batch_size=1
@@ -14,9 +14,10 @@ per_device_eval_batch_size=1
 gradient_accumulation_steps=8
 output_dir=/data/output_dir_pt_singlenode
 
-deepspeed_config_file=ds_zero3__no_offload_optimizer__no_offload_param.json
+deepspeed_config_file=$1
+my_block_size=$2
 
-torchrun --nnodes 1 --nproc_per_node 1 run_clm_pt_with_peft.py \
+torchrun --nnodes 1 --nproc_per_node 8 run_clm_pt.py \
     --deepspeed ${deepspeed_config_file} \
     --model_name_or_path ${pretrained_model} \
     --tokenizer_name_or_path ${chinese_tokenizer_path} \
@@ -26,7 +27,7 @@ torchrun --nnodes 1 --nproc_per_node 1 run_clm_pt_with_peft.py \
     --per_device_train_batch_size ${per_device_train_batch_size} \
     --per_device_eval_batch_size ${per_device_eval_batch_size} \
     --do_train \
-    --seed $RANDOM \
+    --seed 4 \
     --fp16 \
     --num_train_epochs 1 \
     --lr_scheduler_type cosine \
@@ -40,7 +41,7 @@ torchrun --nnodes 1 --nproc_per_node 1 run_clm_pt_with_peft.py \
     --save_steps 200 \
     --gradient_accumulation_steps ${gradient_accumulation_steps} \
     --preprocessing_num_workers 8 \
-    --block_size 1024 \
+    --block_size ${my_block_size} \
     --output_dir ${output_dir} \
     --overwrite_output_dir \
     --ddp_timeout 30000 \

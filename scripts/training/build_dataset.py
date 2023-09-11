@@ -87,7 +87,12 @@ def build_instruction_dataset(data_path: Union[List[str],str],
 
 @dataclass
 class DataCollatorForSupervisedDataset(object):
-    """Collate examples for supervised fine-tuning."""
+    """
+    Collate examples for supervised fine-tuning.
+    功能：对特征进行填充，并创建attention_mask
+    输入：应该是一个batch的List<Dict> 类型
+    输出：应该是一个batch的dict
+    """
 
     tokenizer: transformers.PreTrainedTokenizer
 

@@ -75,6 +75,7 @@ class MyTrainer(Trainer):
         logger.info(f"accelerate state:{self.accelerator.state}")
         logger.info(f"accelerate device:{self.accelerator.device}")
         logger.info(f"accelerate gradient_state:{self.accelerator.gradient_state}")
+        logger.info(f"nvidia-smi:{os.popen('nvidia-smi').read()}")
         self.accelerator.backward(loss)
 
         return loss.detach() / self.args.gradient_accumulation_steps
@@ -351,7 +352,6 @@ def main():
     if training_args.flash_attn:
         from flash_attn_patch import replace_llama_attn_with_flash_attn
         replace_llama_attn_with_flash_attn()
-
     # Sending telemetry. Tracking the example usage helps us better allocate resources to maintain them. The
     # information sent is the one passed as arguments along with your Python/PyTorch versions.
     send_example_telemetry("run_clm", model_args, data_args)
@@ -360,6 +360,12 @@ def main():
     logging.basicConfig(format="%(asctime)s - %(levelname)s - %(name)s - %(message)s", datefmt="%m/%d/%Y %H:%M:%S",
         level=logging.INFO,  # if training_args.local_rank in [-1, 0] else logging.WARN,
         handlers=[logging.StreamHandler(sys.stdout)], )
+
+    logger.info("#########")
+    logger.info(f"model_args {model_args}")
+    logger.info(f"data_args {data_args}")
+    logger.info(f"training_args {training_args}")
+    logger.info("#########")
 
     if training_args.should_log:
         # The default of training_args.log_level is passive, so we set log level at info here to have that default.
@@ -480,6 +486,11 @@ def main():
         }
         result["labels"] = result["input_ids"].copy()
         return result
+    # #删除数据缓存
+    # import shutil
+    # data_args.data_cache_dir
+    # shutil.rmtree(data_args.data_cache_dir)
+
     with training_args.main_process_first(desc="dataset map tokenization and grouping"):
         lm_datasets = []
         path = Path(data_args.dataset_dir)
@@ -607,7 +618,7 @@ def main():
 
     # Initialize our Trainer
     # logger.info(f"train_dataset:{train_dataset[1]}")
-    trainer = MyTrainer(
+    trainer = Trainer(
         model=model,
         args=training_args,
         train_dataset=train_dataset if training_args.do_train else None,

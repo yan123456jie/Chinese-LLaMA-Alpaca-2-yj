@@ -5,18 +5,18 @@ lora_trainable="q_proj,v_proj,k_proj,o_proj,gate_proj,down_proj,up_proj"
 modules_to_save="embed_tokens,lm_head"
 lora_dropout=0.05
 
-pretrained_model=/data/chinese-llama-2-13b
-chinese_tokenizer_path=/data/chinese-llama-2-13b
+pretrained_model=/data/chinese-alpaca-2-7b/
+chinese_tokenizer_path=/data/chinese-alpaca-2-7b/
 dataset_dir=/data/dataset/chinese_sample
-data_cache=/data/temp_data_cache_dir
+data_cache=temp_data_cache_dir
 per_device_train_batch_size=1
 per_device_eval_batch_size=1
 gradient_accumulation_steps=8
-output_dir=/data/output_dir_pt_singlenode
+output_dir=output_dir
 
-deepspeed_config_file=ds_zero3__no_offload_optimizer__no_offload_param.json
+deepspeed_config_file=ds_zero2_no_offload.json
 
-torchrun --nnodes 1 --nproc_per_node 1 run_clm_pt_with_peft.py \
+torchrun --nnodes 1 --nproc_per_node 8 run_clm_pt_with_peft.py \
     --deepspeed ${deepspeed_config_file} \
     --model_name_or_path ${pretrained_model} \
     --tokenizer_name_or_path ${chinese_tokenizer_path} \
